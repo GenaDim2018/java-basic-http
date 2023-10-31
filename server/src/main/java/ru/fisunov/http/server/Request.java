@@ -1,10 +1,13 @@
 package ru.fisunov.http.server;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Request {
+    private InputStream inputStream;
     private String uri;
     private String raw;
     private Map<String, String> params;
@@ -13,8 +16,10 @@ public class Request {
         return uri;
     }
 
-    public Request(String rawRequest) {
-        this.raw = rawRequest;
+    public Request(InputStream inputStream) throws IOException {
+        byte[] buffer = new byte[2048];
+        int n = inputStream.read(buffer);
+        this.raw = new String(buffer, 0, n);
         this.uri = parseUri(raw);
         this.params = parseGetRequestParams(raw);
     }
