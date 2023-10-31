@@ -3,21 +3,43 @@ package ru.fisunov.http.server;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+import java.sql.*;
+import java.util.Properties;
 
 public class ItemsWebApplication implements MyWebApplication {
+
+
     private String name;
     private List<Item> items;
 
     public ItemsWebApplication() {
         this.name = "Items Web Application";
-        this.items = List.of(
-                new Item(1L, "Box"),
-                new Item(2L, "Phone"),
-                new Item(3L, "Table"),
-                new Item(4L, "Monitor"),
-                new Item(5L, "Chair")
-        );
+        this.items = getItemsFromDB();
+    }
+
+    public static List<Item> getItemsFromDB() {
+        List<Item> items = new ArrayList<>();
+        String url = "jdbc:postgresql://localhost:5432/items";
+        Properties props = new Properties();
+        props.setProperty("user", "postgres");
+        props.setProperty("password", "3654");
+        try {
+            Class.forName("org.postgresql.Driver");
+            Connection connection = DriverManager.getConnection(url, props);
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery("SELECT id as id, title as title FROM items");
+            while (rs.next()) {
+                items.add(new Item(rs.getLong("id"), rs.getString("title")));
+            }
+            rs.close();
+            statement.close();
+            connection.close();
+        } catch (SQLException|ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return items;
     }
 
     @Override
